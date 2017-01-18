@@ -1,50 +1,54 @@
 var fetch=require('node-fetch'),
     _=require('lodash');
 
+var _config={
+    keyfrom:'glimis1231231121',
+    key:936554734
+}
 
+module.exports=function(words,config){
+    var cfg=_.extend({},_config,config);
+    //整合参数
+    var ws=[];
+    if(_.isString(words)){
+        ws=[words]
+    }else if(_.isArray(words)){
+        ws=_.map(words,function(k,v){
+            return k;
+        })
+    }else if(_.isObject(words)){
+        ws=_.map(words,function(k,v){
+            return v;
+        }) 
+    }
 
-module.exports=function(words){
-   
     return new Promise(function(resolve, reject){
               var rs={};
-              var ws=_.keys(words);
               var callback=_.after(ws.length,function(){
                 resolve(rs)
               })
               
               _.each(ws,function(query){
-                var url=format.call("http://fanyi.youdao.com/openapi.do?keyfrom={keyfrom}&key={key}&type=data&doctype=json&version=1.1&q={q}",{
-                    keyfrom:'glimis1231231121',
-                    key:936554734,
+                var url=format.call("http://fanyi.youdao.com/openapi.do?keyfrom={keyfrom}&key={key}&type=data&doctype=json&version=1.1&q={q}",
+                    _.extend(cfg,{
                     q:query        
-                })
+                }))
                 
                 url=encodeURI(url);
                          
 
                 fetch(url,{
-                    method: 'GET',
-                    headers: {
-                     "Host":"fanyi.youdao.com",
-                     "User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
-                    },
+                    method: 'GET'
                 })
                     .then(function(res) {
                         return res.json();
                     })
                     .then(function(data){
-                        if(data.errorCode==0){
-                            rs[query]=data.translation[0];
-                        }else{
-                            console.log('query',data)
-                            rs[query]="";
-                        }
-                        
+                        rs[query]=data;
                         callback()
                     })
                     .catch(function(data){
-                        console.log('error',data)
-                        rs[query]='';
+                        rs[query]={};
                         callback()
                     })
               })
